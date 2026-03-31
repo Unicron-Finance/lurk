@@ -1,0 +1,37 @@
+config:
+    max_files: 3
+tree:
+    name: lurk
+    files:
+        - go.mod
+        - README.md
+        - .gitignore
+    children:
+        scaffolding:
+            files:
+                - cmd/lurk/main.go
+        tail-engine:
+            files:
+                - internal/tail/tail.go
+            tests:
+                - internal/tail/tail_test.go
+        graceful-shutdown:
+            files:
+                - internal/signal/signal.go
+            tests:
+                - internal/signal/signal_test.go
+        multi-file:
+            files:
+                - internal/watcher/watcher.go
+            tests:
+                - internal/watcher/watcher_test.go
+        regex-matching:
+            files:
+                - internal/filter/filter.go
+            tests:
+                - internal/filter/filter_test.go
+        stdout-output:
+            files:
+                - internal/output/output.go
+            tests:
+                - internal/output/output_test.go
