@@ -2,7 +2,9 @@ tree:
     name: lurk
     children:
         graceful-shutdown: {}
-        multi-file: {}
+        multi-file:
+            files:
+                - cmd/lurk/main.go
         regex-matching: {}
         scaffolding:
             files:
