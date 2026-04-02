@@ -1,0 +1,15 @@
+tree:
+    name: lurk
+    children:
+        graceful-shutdown: {}
+        multi-file: {}
+        regex-matching: {}
+        scaffolding:
+            files:
+                - cmd/lurk/main.go
+        stdout-output: {}
+        tail-engine:
+            files:
+                - internal/tail/tail.go
+            tests:
+                - internal/tail/tail_test.go
