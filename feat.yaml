@@ -5,6 +5,8 @@ tree:
         multi-file:
             files:
                 - cmd/lurk/main.go
+            tests:
+                - internal/tail/multi_test.go
         regex-matching: {}
         scaffolding:
             files:
