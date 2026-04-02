@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -262,4 +263,110 @@ func (t *Tail) Close() error {
 	}
 
 	return nil
+}
+
+// MultiTailer manages multiple file tailers and merges their output into a single channel.
+type MultiTailer struct {
+	tailers []*Tail
+	prefixes []string
+	mu       sync.Mutex
+}
+
+// NewMultiTailer creates a new MultiTailer for the given file paths.
+// Each line from a file will be prefixed with "[basename] " where basename is the file's base name.
+func NewMultiTailer(filePaths []string) (*MultiTailer, error) {
+	if len(filePaths) == 0 {
+		return nil, fmt.Errorf("no file paths provided")
+	}
+
+	mt := &MultiTailer{
+		tailers:  make([]*Tail, 0, len(filePaths)),
+		prefixes: make([]string, 0, len(filePaths)),
+	}
+
+	for _, path := range filePaths {
+		tailer, err := NewTailer(path)
+		if err != nil {
+			// Clean up any already created tailers
+			for _, t := range mt.tailers {
+				t.Close()
+			}
+			return nil, fmt.Errorf("failed to create tailer for %s: %w", path, err)
+		}
+		mt.tailers = append(mt.tailers, tailer)
+		mt.prefixes = append(mt.prefixes, "["+filepath.Base(path)+"] ")
+	}
+
+	return mt, nil
+}
+
+// Start begins watching all files and returns a channel that receives new lines from all files.
+// Each line is prefixed with "[filename] " where filename is the base name of the file.
+func (m *MultiTailer) Start(ctx context.Context) (<-chan Line, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if len(m.tailers) == 0 {
+		return nil, fmt.Errorf("no tailers to start")
+	}
+
+	// Create output channel
+	out := make(chan Line, 100)
+
+	// Start each tailer and collect their channels
+	var wg sync.WaitGroup
+	var errChan = make(chan error, len(m.tailers))
+
+	for i, tailer := range m.tailers {
+		lines, err := tailer.Start(ctx)
+		if err != nil {
+			// Clean up already started tailers
+			for j := 0; j < i; j++ {
+				m.tailers[j].Close()
+			}
+			return nil, err
+		}
+
+		// Start goroutine to read from this tailer's channel and forward to output with prefix
+		wg.Add(1)
+		go func(idx int, in <-chan Line) {
+			defer wg.Done()
+			prefix := m.prefixes[idx]
+			for line := range in {
+				out <- Line{
+					Text: prefix + line.Text,
+					Time: line.Time,
+				}
+			}
+		}(i, lines)
+	}
+
+	// Close output channel when all tailers are done
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	// Handle any errors from starting tailers
+	select {
+	case err := <-errChan:
+		return nil, err
+	default:
+	}
+
+	return out, nil
+}
+
+// Close stops all tailers and cleans up resources.
+func (m *MultiTailer) Close() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var firstErr error
+	for _, tailer := range m.tailers {
+		if err := tailer.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }
