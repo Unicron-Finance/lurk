@@ -27,7 +27,7 @@ go.work.sum
 # env file
 .env
 
-.feat
+.feat/
 
 # Editor/IDE
 # .idea/
