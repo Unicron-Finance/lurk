@@ -2,3 +2,10 @@ project: lurk
 description: Lightweight log tailer with filtering
 repo: https://github.com/Unicron-Finance/lurk
 language: go
+workflow:
+  - scaffold
+  - test
+  - implement
+  - review
+  - lint
+  - done
