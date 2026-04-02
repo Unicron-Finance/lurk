@@ -41,7 +41,7 @@ func TestMultiFile(t *testing.T) {
 
 	// Write to both files
 	time.Sleep(100 * time.Millisecond)
-	
+
 	f1, _ := os.OpenFile(file1, os.O_APPEND|os.O_WRONLY, 0644)
 	f1.WriteString("line from file1\n")
 	f1.Close()

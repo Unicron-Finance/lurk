@@ -267,7 +267,7 @@ func (t *Tail) Close() error {
 
 // MultiTailer manages multiple file tailers and merges their output into a single channel.
 type MultiTailer struct {
-	tailers []*Tail
+	tailers  []*Tail
 	prefixes []string
 	mu       sync.Mutex
 }
