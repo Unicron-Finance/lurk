@@ -13,3 +13,4 @@ tree:
         tail-engine:
             files:
                 - internal/tail/tail.go
+                - internal/tail/tail_test.go
