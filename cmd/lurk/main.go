@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/Unicron-Finance/lurk/internal/core"
-	_ "github.com/Unicron-Finance/lurk/internal/tail"
 )
 
 func main() {
